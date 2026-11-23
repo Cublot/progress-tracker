@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import webpush from 'web-push';
+import { handleSchedule } from '@vercel/schedules';
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -14,15 +15,7 @@ function escapeHtml(value = '') {
   })[c]);
 }
 
-export default async function handler(req, res) {
-  if (req.method !== 'GET' && req.method !== 'POST') {
-    res.setHeader('Allow', 'GET, POST');
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-  const secret = process.env.CRON_SECRET;
-  if (!secret || req.headers.authorization !== `Bearer ${secret}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+export const POST = handleSchedule(async (metadata) => {
   const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'];
   const missing = required.filter(k => !process.env[k]);
   if (missing.length) return res.status(500).json({ error: `Missing environment variables: ${missing.join(', ')}` });
@@ -119,5 +112,5 @@ export default async function handler(req, res) {
     }
   }
 
-  return res.status(200).json({ ok: true, ...results });
-}
+  console.log('Course Streak reminder run:', JSON.stringify({ schedule: metadata.name, scheduledAt: metadata.scheduledAt, ...results }));
+});
