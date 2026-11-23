@@ -3,6 +3,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Course Streak</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
@@ -69,13 +70,12 @@
     .notice{display:none;padding:13px 16px;border-radius:14px;background:#eaf2ff;color:#235bb9;font-size:12px;line-height:1.5;margin-bottom:20px}
     .notice.visible{display:block}
     .month-list{border-top:1px solid var(--line);margin-top:24px;padding-top:21px}.month-list h3{font-size:15px;margin:0 0 13px}.entry-list{display:grid;gap:8px;max-height:260px;overflow:auto}.entry-item{display:flex;align-items:start;gap:12px;width:100%;text-align:left;border:1px solid #e9eef6;border-radius:13px;background:#fbfcff;padding:12px;color:var(--ink)}.entry-item:hover{border-color:#9abaff;background:#f3f7ff}.entry-date{flex:none;color:#2b6be6;font-size:11px;font-weight:800;min-width:45px}.entry-text{font-size:12px;line-height:1.5;overflow-wrap:anywhere}.empty-list{font-size:12px;color:var(--muted);line-height:1.5;margin:0}.small-btn[aria-pressed="true"]{background:#eaf2ff;color:#215bc2;border-color:#9cbcfb}.day:focus-visible,.icon-btn:focus-visible,.entry-item:focus-visible,.small-btn:focus-visible{outline:3px solid #8eb4ff;outline-offset:2px}@media(max-width:420px){.section-head{flex-wrap:wrap}.month-controls{width:100%;justify-content:space-between}.stat{padding:0 7px}.stat-value{font-size:24px}}
+
+    .auth-bar{display:flex;align-items:center;gap:10px}.auth-email{font-size:12px;color:#64748b;font-weight:700}.auth-panel{display:none;margin:-30px 0 28px;padding:20px 22px;border:1px solid #e6eaf0;border-radius:18px;background:#fff;box-shadow:0 8px 24px #20375b0a}.auth-panel.visible{display:block}.auth-form{display:flex;flex-wrap:wrap;align-items:end;gap:10px}.auth-field{display:grid;gap:6px;flex:1;min-width:180px}.auth-field label{margin:0}.auth-field input{height:40px;border:1px solid #e1e8f0;border-radius:10px;padding:0 11px;font-size:13px}.auth-actions{display:flex;gap:8px;flex-wrap:wrap}.auth-message{font-size:12px;color:#2969df;margin:12px 0 0;line-height:1.5}.auth-button{border:1px solid #e1e8f3;background:#fff;color:#47618a;border-radius:10px;padding:9px 12px;font-size:11px;font-weight:800}@media(max-width:520px){.auth-bar{gap:6px}.auth-email{max-width:120px;overflow:hidden;text-overflow:ellipsis}.auth-panel{margin:-18px 0 24px}}
     footer{color:#aab3c0;font-size:11px;text-align:center;padding-top:35px}
     @media(max-width:800px){.shell{padding:24px 18px 50px}header{margin-bottom:38px}.layout{grid-template-columns:1fr}.right{grid-row:1}.hero{align-items:start}.hero-note{display:none}}
     @media(max-width:520px){.shell{padding:18px 14px 40px}header{margin-bottom:33px}.brand{font-size:16px}.header-right .pill{font-size:0;padding:10px}.header-right .pill svg{width:17px;height:17px}.hero{margin-bottom:25px}.card{border-radius:22px}.stats{padding:23px 8px}.stat{padding:0 10px}.stat-value{font-size:27px}.stat-value small{font-size:11px}.stat-label{font-size:10px;min-height:25px}.stat-foot{font-size:10px}.calendar-card,.editor{padding:22px 18px}.section-head{align-items:start}.month-controls{gap:5px;font-size:11px}.day{min-height:37px}.weekdays,.days{gap:3px}}
   </style>
-  <script src="/_sdk/bddf767fb065c21b.data_sdk.js" type="text/javascript" integrity="sha512-2vpLbebzZqyNGDHj4S/hNQer3IOu5izs2myxynH8/NvYQHh8EnUZgHGROXCT/+fDAmTcNSX4klehRoicmAFsqg=="></script>
-  <script src="/_sdk/476410e34eaa0915.editing_sdk.js" type="text/javascript" integrity="sha512-mOFJq2Lc9JUe76DPzDphmOAL/7wppZ1b/KMo7C3dt4jdisXcQsUw7UG6IoL/WebQQvrgYKa9JAaLKQQtJ5R8SQ=="></script>
-  <script src="/_sdk/d71f39f99b327c9e.resizing_sdk.js" type="text/javascript" integrity="sha512-QUhSaDv5LVWBqCeVvNygPNOyWwX1vNVotv+iARsyZ+DyyR/968VN971iTOX9sVg6Ny+LvUzmd9SibhFV+xeITQ=="></script>
  </head>
  <body>
   <div class="shell">
@@ -87,6 +87,7 @@
      <span class="pill app-tag"><i data-lucide="sparkles"></i> A little progress, every day</span>
     </div>
    </header>
+   <section id="auth-panel" class="auth-panel" aria-label="Account access"><form id="auth-form" class="auth-form"><div class="auth-field"><label for="auth-email-input">Email address</label><input id="auth-email-input" type="email" autocomplete="email" required placeholder="you@example.com"></div><div class="auth-field"><label for="auth-password-input">Password</label><input id="auth-password-input" type="password" autocomplete="current-password" minlength="8" required placeholder="At least 8 characters"></div><div class="auth-actions"><button class="save" id="auth-submit" type="submit">Sign in</button><button class="auth-button" id="auth-signup" type="button">Create account</button><button class="auth-button" id="auth-signout" type="button" hidden>Sign out</button></div></form><p id="auth-message" class="auth-message" role="status">Sign in to save and access your lessons across devices.</p></section>
    <main>
     <div class="hero">
      <div>
@@ -182,122 +183,61 @@
   </div>
   <script>
     const $ = id => document.getElementById(id);
+    const SUPABASE_URL = "https://ggmtmdpqqalaxrjaqcwu.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_S1Ieo9uJL6ews7LzDEvONg_tAfopEdP";
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const today = new Date();
     const key = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     let selected = new Date(today.getFullYear(),today.getMonth(),today.getDate());
     let viewing = new Date(today.getFullYear(),today.getMonth(),1);
-    let records = [], ready = false, loadTimer, lastReminderSlot = '', dirty = false, saving = false, completionPending = false;
-    const handler = {onDataChanged(data){clearTimeout(loadTimer);records=data;ready=true;render();if(!dirty && !saving)$('save-status').textContent='';}};
+    let records=[],ready=false,lastReminderSlot='',dirty=false,saving=false,completionPending=false,currentUser=null,reminderEnabled=true;
     function message(text){$('save-status').textContent=text}
+    function authMessage(text){$('auth-message').textContent=text}
     function canLeaveDraft(){if(saving){message('Please wait for your lesson to finish saving.');return false}if(dirty){message('Save your lesson before choosing another day.');$('lesson-note').focus();return false}return true}
     function render(){
-      const logged=records.filter(r=>r.kind==='lesson' && r.note);
-      const dates=new Set(logged.map(r=>r.date));
-      let cursor=new Date(today.getFullYear(),today.getMonth(),today.getDate());
-      if(!dates.has(key(cursor)))cursor.setDate(cursor.getDate()-1);
+      const logged=records.filter(r=>r.kind==='lesson'&&r.note),dates=new Set(logged.map(r=>r.date));
+      let cursor=new Date(today.getFullYear(),today.getMonth(),today.getDate());if(!dates.has(key(cursor)))cursor.setDate(cursor.getDate()-1);
       let streak=0;while(dates.has(key(cursor))){streak++;cursor.setDate(cursor.getDate()-1)}
-      $('streak-count').innerHTML=`${streak} <small>${streak===1?'day':'days'}</small>`;
-      $('total-count').textContent=dates.size;
+      $('streak-count').innerHTML=`${streak} <small>${streak===1?'day':'days'}</small>`;$('total-count').textContent=dates.size;
       const monthKey=`${viewing.getFullYear()}-${String(viewing.getMonth()+1).padStart(2,'0')}`;
       $('month-label').textContent=viewing.toLocaleDateString(undefined,{month:'long',year:'numeric'});
       const completed=records.some(r=>r.kind==='completed'&&r.month===monthKey);
-      $('complete-month').innerHTML=completed?'✓ Course completed':'Course completed <span aria-hidden="true">↗</span>';
-      $('complete-month').classList.toggle('done',completed);
-      $('complete-month').disabled=completed || !ready || completionPending;
-      const list=$('month-entries');list.replaceChildren();
-      const monthly=logged.filter(r=>r.date?.startsWith(monthKey)).sort((a,b)=>b.date.localeCompare(a.date));
-      if(!monthly.length){const empty=document.createElement('p');empty.className='empty-list';empty.textContent=ready?'No lessons yet this month. Pick a day and capture a takeaway.':'Loading lessons…';list.append(empty)}
+      $('complete-month').innerHTML=completed?'✓ Course completed':'Course completed <span aria-hidden="true">↗</span>';$('complete-month').classList.toggle('done',completed);$('complete-month').disabled=completed||!ready||completionPending;
+      const list=$('month-entries');list.replaceChildren();const monthly=logged.filter(r=>r.date?.startsWith(monthKey)).sort((a,b)=>b.date.localeCompare(a.date));
+      if(!monthly.length){const empty=document.createElement('p');empty.className='empty-list';empty.textContent=ready?'No lessons yet this month. Pick a day and capture a takeaway.':'Sign in to load your lessons.';list.append(empty)}
       monthly.forEach(r=>{const item=document.createElement('button');item.type='button';item.className='entry-item app-button';const date=document.createElement('span');date.className='entry-date';date.textContent=new Date(r.date+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'});const text=document.createElement('span');text.className='entry-text';text.textContent=r.note;item.append(date,text);item.addEventListener('click',()=>{if(!canLeaveDraft())return;selected=new Date(r.date+'T12:00:00');dirty=false;render();$('lesson-note').focus()});list.append(item)});
-      const container=$('calendar-days');container.replaceChildren();
-      const first=new Date(viewing.getFullYear(),viewing.getMonth(),1).getDay();
+      const container=$('calendar-days');container.replaceChildren();const first=new Date(viewing.getFullYear(),viewing.getMonth(),1).getDay();
       for(let i=0;i<first;i++){const spacer=document.createElement('span');spacer.className='empty';container.append(spacer)}
       const count=new Date(viewing.getFullYear(),viewing.getMonth()+1,0).getDate();
-      for(let day=1;day<=count;day++){
-        const d=new Date(viewing.getFullYear(),viewing.getMonth(),day), dateKey=key(d);
-        const button=document.createElement('button');button.type='button';button.textContent=day;
-        button.className='day app-button'+(dates.has(dateKey)?' logged':'')+(dateKey===key(selected)?' selected':'')+(dateKey===key(today)?' today':'');
-        button.setAttribute('aria-label',`${d.toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})}${dates.has(dateKey)?', lesson logged':''}`);
-        button.setAttribute('aria-pressed',dateKey===key(selected));
-        button.addEventListener('click',()=>{if(!canLeaveDraft())return;selected=d;dirty=false;render();message('')});container.append(button);
-      }
-      $('selected-date').textContent=selected.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
-      $('editor-title').textContent=key(selected)===key(today)?"Today's lesson":'Lesson journal';
-      const existing=logged.find(r=>r.date===key(selected));
-      if(!dirty && !saving)$('lesson-note').value=existing?.note||'';
-      $('character-count').textContent=`${$('lesson-note').value.length} / 1000`;
-      $('save-lesson').disabled=!ready || saving;
-      const enabled=records.find(r=>r.kind==='reminder')?.note!=='off';
-      $('toggle-reminders').setAttribute('aria-pressed',String(enabled));$('toggle-reminders').textContent=`On-page reminders: ${enabled?'On':'Off'}`;
-      $('toggle-reminders').disabled=!ready;
-      checkReminder();
+      for(let day=1;day<=count;day++){const d=new Date(viewing.getFullYear(),viewing.getMonth(),day),dateKey=key(d),button=document.createElement('button');button.type='button';button.textContent=day;button.className='day app-button'+(dates.has(dateKey)?' logged':'')+(dateKey===key(selected)?' selected':'')+(dateKey===key(today)?' today':'');button.setAttribute('aria-label',`${d.toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})}${dates.has(dateKey)?', lesson logged':''}`);button.setAttribute('aria-pressed',dateKey===key(selected));button.addEventListener('click',()=>{if(!canLeaveDraft())return;selected=d;dirty=false;render();message('')});container.append(button)}
+      $('selected-date').textContent=selected.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});$('editor-title').textContent=key(selected)===key(today)?"Today's lesson":'Lesson journal';
+      const existing=logged.find(r=>r.date===key(selected));if(!dirty&&!saving)$('lesson-note').value=existing?.note||'';$('character-count').textContent=`${$('lesson-note').value.length} / 1000`;$('save-lesson').disabled=!ready||saving;
+      $('toggle-reminders').setAttribute('aria-pressed',String(reminderEnabled));$('toggle-reminders').textContent=`On-page reminders: ${reminderEnabled?'On':'Off'}`;$('toggle-reminders').disabled=!ready;checkReminder();
     }
-    function checkReminder(){
-      if(!ready)return;
-      if(records.find(r=>r.kind==='reminder')?.note==='off'){$('reminder-notice').classList.remove('visible');return}
-      const now=new Date(), hour=now.getHours(), slot=[16,18,20,22].filter(h=>hour>=h).pop();
-      const todayKey=key(now);
-      if(!slot || records.some(r=>r.kind==='lesson'&&r.date===todayKey&&r.note)){$('reminder-notice').classList.remove('visible');return}
-      const slotKey=`${todayKey}-${slot}`;
-      if(lastReminderSlot===slotKey)return;
-      lastReminderSlot=slotKey;
-      $('reminder-notice').textContent="A little reminder: you haven't logged today's lesson yet. Take a moment to capture what you learned.";
-      $('reminder-notice').classList.add('visible');
-      if('Notification' in window && Notification.permission==='granted'){
-        try{new Notification('Your course streak is waiting',{body:"Take a moment to log today's lesson."})}catch(e){}
-      }
-    }
-    async function init(){
+    async function loadRecords(){
+      if(!currentUser){records=[];ready=false;render();message('Sign in to save and access your lessons.');return}
       ready=false;message('Loading your lessons…');
-      clearTimeout(loadTimer);loadTimer=setTimeout(()=>{if(!ready)message('Could not load your lessons. Use Retry connection below.');},8000);
-      try{const result=await window.dataSdk.init(handler);if(!result.isOk){clearTimeout(loadTimer);message('Could not connect to your saved lessons. Use Retry connection below.')}}catch(e){clearTimeout(loadTimer);message('Could not connect to your saved lessons. Use Retry connection below.')}
+      const [lessons,completions,prefs]=await Promise.all([db.from('lessons').select('id,lesson_date,note,created_at').order('lesson_date',{ascending:true}),db.from('course_completions').select('id,completion_month,created_at'),db.from('reminder_preferences').select('enabled').maybeSingle()]);
+      const error=lessons.error||completions.error||prefs.error;if(error){console.error(error);message('Could not load your data: '+error.message);return}
+      records=[...(lessons.data||[]).map(r=>({id:r.id,kind:'lesson',date:r.lesson_date,month:r.lesson_date.slice(0,7),note:r.note,created_at:r.created_at})),...(completions.data||[]).map(r=>({id:r.id,kind:'completed',date:'',month:r.completion_month.slice(0,7),note:'',created_at:r.created_at}))];
+      reminderEnabled=prefs.data?.enabled??true;ready=true;render();message('Your lessons are synced.');
     }
-    $('lesson-form').addEventListener('submit',async event=>{
-      event.preventDefault();if(!ready)return;
-      const note=$('lesson-note').value.trim();if(!note)return;
-      const button=event.submitter||$('save-lesson'), date=key(selected), existing=records.find(r=>r.kind==='lesson'&&r.date===date);
-      if(!existing&&records.length>=999){message('Your saved lessons have reached the 999-record limit.');return}
-      saving=true;button.disabled=true;button.textContent='Saving…';
-      try{
-        const result=existing
-          ?await window.dataSdk.update({...existing,note})
-          :await window.dataSdk.create({kind:'lesson',date,month:date.slice(0,7),note,created_at:new Date().toISOString()});
-        if(result.isOk){if($('lesson-note').value.trim()===note)dirty=false;message('Lesson saved. Your progress looks good.')}else message('Could not confirm the save. Refresh before trying again.');
-      }catch(e){message('Could not confirm the save. Refresh before trying again.')}
-      finally{saving=false;button.disabled=false;button.innerHTML='Save lesson <span aria-hidden="true">↗</span>'}
-    });
-    $('complete-month').addEventListener('click',async event=>{
-      if(!ready)return;
-      const month=`${viewing.getFullYear()}-${String(viewing.getMonth()+1).padStart(2,'0')}`;
-      if(records.some(r=>r.kind==='completed'&&r.month===month))return;
-      if(records.length>=999){message('Your saved entries have reached the 999-record limit.');return}
-      const button=event.currentTarget;completionPending=true;button.disabled=true;button.textContent='Saving completion…';
-      try{
-        const result=await window.dataSdk.create({kind:'completed',date:'',month,note:'',created_at:new Date().toISOString()});
-        message(result.isOk?'This month is marked complete.':'Could not confirm the completion. Refresh before trying again.');
-      }catch(e){message('Could not confirm the completion. Refresh before trying again.')}
-      finally{completionPending=false;render()}
-    });
-    $('prev-month').addEventListener('click',()=>{if(!canLeaveDraft())return;viewing=new Date(viewing.getFullYear(),viewing.getMonth()-1,1);render()});
-    $('next-month').addEventListener('click',()=>{if(!canLeaveDraft())return;viewing=new Date(viewing.getFullYear(),viewing.getMonth()+1,1);render()});
+    async function refreshAuth(){const {data:{session}}=await db.auth.getSession();currentUser=session?.user||null;updateAuthUI();if(currentUser)await loadRecords();else{records=[];ready=false;render();message('Sign in to save and access your lessons.')}}
+    function updateAuthUI(){ $('auth-user').textContent=currentUser?currentUser.email:'';$('auth-toggle').textContent=currentUser?'Account':'Sign in';$('auth-signout').hidden=!currentUser;$('auth-submit').hidden=!!currentUser;$('auth-signup').hidden=!!currentUser;$('auth-email-input').disabled=!!currentUser;$('auth-password-input').disabled=!!currentUser;if(currentUser){$('auth-panel').classList.remove('visible');authMessage('Signed in as '+currentUser.email)}else authMessage('Sign in to save and access your lessons across devices.')}
+    $('auth-toggle').addEventListener('click',()=>{$('auth-panel').classList.toggle('visible')});
+    $('auth-form').addEventListener('submit',async e=>{e.preventDefault();if(currentUser)return;const email=$('auth-email-input').value.trim(),password=$('auth-password-input').value;$('auth-submit').disabled=true;$('auth-signup').disabled=true;authMessage('Signing in…');const {error}=await db.auth.signInWithPassword({email,password});$('auth-submit').disabled=false;$('auth-signup').disabled=false;if(error)authMessage(error.message);else authMessage('Signed in. Loading your learning history…')});
+    $('auth-signup').addEventListener('click',async()=>{const email=$('auth-email-input').value.trim(),password=$('auth-password-input').value;if(!email||password.length<8){authMessage('Enter a valid email and a password of at least 8 characters.');return}$('auth-signup').disabled=true;authMessage('Creating your account…');const {data,error}=await db.auth.signUp({email,password,options:{emailRedirectTo:location.origin}});$('auth-signup').disabled=false;if(error)authMessage(error.message);else if(data.session)authMessage('Account created. You are signed in.');else authMessage('Account created. Check your email to confirm your address, then sign in.')});
+    $('auth-signout').addEventListener('click',async()=>{const {error}=await db.auth.signOut();if(error)authMessage(error.message);else authMessage('Signed out.')});
+    db.auth.onAuthStateChange((_event,session)=>{currentUser=session?.user||null;updateAuthUI();if(currentUser)loadRecords().catch(e=>{console.error(e);message('Could not load your lessons.')});else{records=[];ready=false;render();message('Sign in to save and access your lessons.')}});
+    $('lesson-form').addEventListener('submit',async event=>{event.preventDefault();if(!ready||!currentUser)return;const note=$('lesson-note').value.trim();if(!note){message('Write a short takeaway before saving.');return}const button=event.submitter||$('save-lesson'),date=key(selected);saving=true;button.disabled=true;button.textContent='Saving…';try{const {error}=await db.from('lessons').upsert({user_id:currentUser.id,lesson_date:date,note},{onConflict:'user_id,lesson_date'});if(error)throw error;dirty=false;await loadRecords();message('Lesson saved. Your progress is synced.')}catch(e){console.error(e);message('Could not save your lesson: '+e.message)}finally{saving=false;button.disabled=false;button.innerHTML='Save lesson <span aria-hidden="true">↗</span>';render()}});
+    $('complete-month').addEventListener('click',async event=>{if(!ready||!currentUser)return;const month=`${viewing.getFullYear()}-${String(viewing.getMonth()+1).padStart(2,'0')}`;if(records.some(r=>r.kind==='completed'&&r.month===month))return;const button=event.currentTarget;completionPending=true;button.disabled=true;button.textContent='Saving completion…';try{const {error}=await db.from('course_completions').upsert({user_id:currentUser.id,completion_month:month+'-01'},{onConflict:'user_id,completion_month'});if(error)throw error;await loadRecords();message('This month is marked complete.')}catch(e){console.error(e);message('Could not save completion: '+e.message)}finally{completionPending=false;render()}});
+    $('prev-month').addEventListener('click',()=>{if(!canLeaveDraft())return;viewing=new Date(viewing.getFullYear(),viewing.getMonth()-1,1);render()});$('next-month').addEventListener('click',()=>{if(!canLeaveDraft())return;viewing=new Date(viewing.getFullYear(),viewing.getMonth()+1,1);render()});
     $('lesson-note').addEventListener('input',()=>{dirty=true;$('character-count').textContent=`${$('lesson-note').value.length} / 1000`});
-    $('retry-connection').addEventListener('click',()=>{if(!ready)init();else message('Your lessons are connected.')});
-    $('toggle-reminders').addEventListener('click',async event=>{
-      if(!ready)return;const button=event.currentTarget,existing=records.find(r=>r.kind==='reminder'),next=existing?.note==='off'?'on':'off';
-      if(!existing&&records.length>=999){$('notification-status').textContent='Your saved entries have reached the 999-record limit.';return}
-      button.disabled=true;button.textContent='Saving setting…';
-      try{const result=existing?await window.dataSdk.update({...existing,note:next}):await window.dataSdk.create({kind:'reminder',date:'',month:'',note:next,created_at:new Date().toISOString()});$('notification-status').textContent=result.isOk?`On-page reminders ${next==='on'?'enabled':'paused'}.`:'Could not confirm the setting. Refresh before trying again.'}
-      catch(e){$('notification-status').textContent='Could not confirm the setting. Refresh before trying again.'}
-      finally{button.disabled=false;render()}
-    });
-    $('enable-notifications').addEventListener('click',async()=>{
-      const status=$('notification-status');
-      if(!('Notification' in window)){status.textContent='Browser notifications are not available here; on-page reminders still work while this page is open.';return}
-      try{const permission=await Notification.requestPermission();status.textContent=permission==='granted'?'Browser alerts enabled while this page is open.':'Browser alerts are unavailable or were not allowed. On-page reminders still work while this page is open.'}
-      catch(e){status.textContent='Browser alerts are unavailable here. On-page reminders still work while this page is open.'}
-    });
-    $('today-label').textContent=today.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
-    render();init();setInterval(checkReminder,60000);
-    lucide.createIcons();
-  </script>
+    $('retry-connection').addEventListener('click',()=>{if(currentUser)loadRecords().catch(e=>message(e.message));else{$('auth-panel').classList.add('visible');authMessage('Sign in to connect your saved lessons.')}});
+    $('toggle-reminders').addEventListener('click',async()=>{if(!ready||!currentUser)return;const next=!reminderEnabled;$('toggle-reminders').disabled=true;const {error}=await db.from('reminder_preferences').upsert({user_id:currentUser.id,enabled:next},{onConflict:'user_id'});$('toggle-reminders').disabled=false;if(error){$('notification-status').textContent='Could not save reminder preference: '+error.message;return}reminderEnabled=next;$('notification-status').textContent=`On-page reminders ${next?'enabled':'paused'}.`;render()});
+    $('enable-notifications').addEventListener('click',async()=>{const status=$('notification-status');if(!('Notification'in window)){status.textContent='Browser notifications are not supported in this browser.';return}try{const permission=await Notification.requestPermission();status.textContent=permission==='granted'?'Browser permission granted. Background push setup is the next development step.':'Browser notifications were not permitted.'}catch(e){status.textContent='Could not request browser notification permission.'}});
+    function checkReminder(){if(!ready||!currentUser||!reminderEnabled)return;const now=new Date(),hour=now.getHours(),slot=[16,18,20,22].filter(h=>hour>=h).pop(),todayKey=key(now);if(!slot||records.some(r=>r.kind==='lesson'&&r.date===todayKey&&r.note)){$('reminder-notice').classList.remove('visible');return}const slotKey=`${todayKey}-${slot}`;if(lastReminderSlot===slotKey)return;lastReminderSlot=slotKey;$('reminder-notice').textContent="A little reminder: you haven't logged today's lesson yet. Take a moment to capture what you learned.";$('reminder-notice').classList.add('visible');if('Notification'in window&&Notification.permission==='granted'){try{new Notification('Your course streak is waiting',{body:"Take a moment to log today's lesson."})}catch(e){}}}
+    $('today-label').textContent=today.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});render();refreshAuth().catch(e=>{console.error(e);message('Could not connect to Supabase. Check your project configuration.')});setInterval(checkReminder,60000);lucide.createIcons();
+  </script>>
  </body>
 </html>
