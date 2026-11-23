@@ -1,60 +1,91 @@
-# Progress Tracker
+# Course Streak
 
-A lightweight learning streak tracker. The current production UI is a static HTML/CSS/JavaScript app; backend integration is being developed on `feature/supabase-foundation`.
+A learning streak tracker built with HTML, CSS, JavaScript, Supabase, and Vercel.
 
-## Backend direction
+## Stack
 
-- **Frontend hosting:** Vercel
-- **Authentication and database:** Supabase Auth + PostgreSQL
-- **Email delivery:** Resend (server-side only)
-- **Browser/mobile push:** Web Push API + service worker
-- **Scheduled reminders:** Vercel Cron calling a protected server endpoint
+- Static frontend hosted on Vercel
+- Supabase Auth + PostgreSQL for accounts and learning history
+- Resend for email reminders
+- Web Push API + service worker for browser and installed-PWA notifications
+- Vercel Schedules for scheduled reminder checks
 
 ## Database setup
 
-1. Create a Supabase project.
-2. Open **SQL Editor** in the Supabase dashboard.
-3. Run `supabase/schema.sql`.
-4. In **Authentication → URL Configuration**, set the production site URL and allowed redirect URLs for your Vercel deployment and local development.
-5. In **Project Settings → API**, copy the Project URL and publishable/anon key.
+1. Run `supabase/schema.sql` in the Supabase SQL Editor (already completed for the current project).
+2. Run `supabase/reminders.sql` in the Supabase SQL Editor. This is a separate migration for delivery tracking and the secure reminder-claim function.
+3. In Supabase Auth → URL Configuration, keep the Vercel production URL as the Site URL and allow the production redirect URL.
 
-The schema creates:
-- `profiles`: timezone and display name
-- `lessons`: one lesson per user per local calendar date
-- `course_completions`: monthly completion markers
-- `reminder_preferences`: per-user reminder schedule and channel preferences
-- `push_subscriptions`: browser/device push endpoints
-
-Row Level Security is enabled. User-owned rows are restricted to the authenticated owner. Never put the Supabase service-role key in browser JavaScript.
-
-## Vercel environment variables
-
-The browser app will need:
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
-
-For a static frontend, Vercel environment variables are not automatically exposed to plain HTML. When the client integration is added, use a small public config module populated with the Supabase project URL and publishable/anon key. These values are designed to be public; database security must come from RLS.
-
-Server-side functions will additionally need private environment variables:
-- `SUPABASE_SERVICE_ROLE_KEY` (server only)
-- `RESEND_API_KEY` (server only)
-- `VAPID_PUBLIC_KEY`
-- `VAPID_PRIVATE_KEY`
-- `CRON_SECRET`
-
-Do not commit real credentials to GitHub.
+The schema uses Row Level Security. User records are scoped to the authenticated owner. Never expose the Supabase service-role key in browser JavaScript.
 
 ## Reminder behavior
 
-The intended schedule is 4 PM, 6 PM, 8 PM and 10 PM in each user's saved timezone, stopping once that user's lesson is recorded for the day. A server-side scheduled job is required for reminders when the browser is closed. Browser notifications require permission; iOS web push additionally requires an installed Home Screen web app on supported iOS versions.
+The initial reminder schedule is 4 PM, 6 PM, 8 PM, and 10 PM in each user's detected IANA timezone. The schedule is fixed for the first release; user-customizable times can be added later.
 
-## Streak rules
+- The master reminder switch pauses all automated channels.
+- Email reminders are opt-in per account.
+- Push notifications are opt-in per device/browser.
+- A reminder is not sent after a lesson is saved for that user's local calendar date.
+- A unique delivery record per user/date/hour/channel prevents duplicate sends if schedule invocations overlap.
+- The scheduled worker checks every 15 minutes. The SQL claim function only claims the first 15 minutes of each target hour.
 
-- A day counts when a non-empty lesson is saved for that user's local date.
-- At most one lesson record exists per user per date; editing updates that day's note.
-- A current streak counts consecutive logged calendar days, allowing the streak to remain current through today or yesterday.
-- The browser must not be trusted to assign another user's ID; authenticated database policies enforce ownership.
+## Vercel environment variables
+
+Configure these in Vercel Project → Settings → Environment Variables. Add them to Production and Preview only as needed, then redeploy.
+
+| Name | Purpose |
+|---|---|
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Private server-only Supabase service-role key |
+| `RESEND_API_KEY` | Private Resend API key |
+| `REMINDER_FROM_EMAIL` | Verified Resend sender, e.g. `Course Streak <reminders@yourdomain.com>` |
+| `APP_URL` | Production app URL |
+| `VAPID_PUBLIC_KEY` | Public Web Push VAPID key |
+| `VAPID_PRIVATE_KEY` | Private Web Push VAPID key |
+| `VAPID_SUBJECT` | Contact URI, e.g. `mailto:you@yourdomain.com` |
+
+Generate a VAPID key pair locally with:
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+Store the public and private keys in Vercel. The private key must never be included in frontend code or committed to GitHub. The public key is served to the browser by `/api/push/public-key`.
+
+For email delivery, verify the sender domain with Resend and use the exact verified sender address in `REMINDER_FROM_EMAIL`.
+
+## Vercel Schedules
+
+The project uses Vercel Schedules (the newer scheduling feature) to invoke a private function every 15 minutes. The worker evaluates each user's local time in the database, so the schedule itself runs in UTC.
+
+The Schedules feature is currently in public beta. Ensure it is enabled for the Vercel team before deploying. The Hobby allowance currently includes 5,000 schedule runs/month; a 15-minute schedule uses about 2,880 runs/month. Provider/function usage and email delivery limits still apply.
+
+## iPhone and mobile push
+
+- Android and supported desktop browsers can subscribe to Web Push on HTTPS.
+- On iPhone/iPad, the user must add the website to the Home Screen and open the installed web app before enabling push. This is an Apple platform requirement.
+- Browser notification permission is per device and can be revoked by the user.
+- Push delivery is not a replacement for email; users can enable either channel independently.
+
+## Capacity and launch notes
+
+The database structure is designed for multiple accounts and 2,000 users is a reasonable initial target for this workload, subject to the selected Supabase project's compute, database connection, and usage limits. Notification providers have their own throughput and daily quotas; load-test reminder batches and upgrade provider plans before a public launch at that volume.
+
+The reminder worker currently processes claimed jobs in one invocation. Before a large public launch, add a durable queue/batched sender and provider rate-limit handling so a peak reminder window cannot exceed function duration or email-provider quotas.
 
 ## Development status
 
-The Supabase schema is the first backend foundation. Authentication UI, Supabase client wiring, serverless reminder endpoints, service worker, email delivery, and end-to-end tests still need to be implemented and configured before launch.
+Implemented in the development branch:
+- Supabase account registration, login, and lesson persistence
+- Per-user reminder preferences
+- Reminder delivery log and atomic claim function
+- Scheduled email and Web Push delivery worker
+- Push subscription UI and service worker
+
+Still requires external setup and live verification:
+- Run `supabase/reminders.sql`
+- Configure the Vercel environment variables above
+- Verify the sender domain and Resend API key
+- Generate VAPID keys and configure Vercel
+- Enable Vercel Schedules for the team
+- Test email and push on real devices and verify schedule execution logs
