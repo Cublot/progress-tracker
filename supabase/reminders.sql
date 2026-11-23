@@ -19,8 +19,8 @@ alter table public.reminder_delivery_log enable row level security;
 drop policy if exists "Users read own reminder delivery history" on public.reminder_delivery_log;
 create policy "Users read own reminder delivery history" on public.reminder_delivery_log
 for select to authenticated using (auth.uid() = user_id);
-grant select on public.reminder_delivery_log to authenticated;
 revoke all on public.reminder_delivery_log from anon, authenticated;
+grant select on public.reminder_delivery_log to authenticated;
 
 -- Only the server's service-role client may claim jobs. Each slot/channel is
 -- inserted atomically, so overlapping cron invocations cannot double-send.
