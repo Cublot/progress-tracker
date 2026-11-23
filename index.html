@@ -2,6 +2,10 @@
 <html lang="en">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7fb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Course Streak">
+  <link rel="manifest" href="/manifest.webmanifest">
   <title>Course Streak</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -171,9 +175,9 @@
         <i data-lucide="bell"></i>
        </div>
        <h2 id="reminders-title">A gentle nudge</h2>
-       <p>When this page is open and today has no log, get an on-page reminder every two hours from 4–10 PM. Browser alerts may also be available. Email and phone shortcuts open a message you can send yourself; they do not send automatically.</p>
+       <p>Get automatic reminders at 4 PM, 6 PM, 8 PM and 10 PM in your local time. Reminders stop as soon as you log a lesson.</p>
        <div class="reminder-actions">
-        <button id="toggle-reminders" class="small-btn app-button" type="button" aria-pressed="true">On-page reminders: On</button><button id="enable-notifications" class="small-btn app-button" type="button">Enable browser alerts</button><a id="email-shortcut" class="small-btn app-link" href="mailto:?subject=Course%20streak%20reminder&amp;body=Time%20to%20log%20today%27s%20lesson.">Email shortcut ↗</a><a id="sms-shortcut" class="small-btn app-link" href="sms:?body=Time%20to%20log%20today%27s%20lesson.">Phone shortcut ↗</a>
+        <button id="toggle-reminders" class="small-btn app-button" type="button" aria-pressed="true">Reminders: On</button><button id="toggle-email-reminders" class="small-btn app-button" type="button">Email reminders: Off</button><button id="enable-notifications" class="small-btn app-button" type="button">Enable phone notifications</button>
        </div>
        <p id="notification-status" class="status" role="status"></p>
       </section>
@@ -191,7 +195,7 @@
     const key = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     let selected = new Date(today.getFullYear(),today.getMonth(),today.getDate());
     let viewing = new Date(today.getFullYear(),today.getMonth(),1);
-    let records=[],ready=false,lastReminderSlot='',dirty=false,saving=false,completionPending=false,currentUser=null,reminderEnabled=true;
+    let records=[],ready=false,lastReminderSlot='',dirty=false,saving=false,completionPending=false,currentUser=null,reminderEnabled=true,emailEnabled=false,pushEnabled=false;
     function message(text){$('save-status').textContent=text}
     function authMessage(text){$('auth-message').textContent=text}
     function canLeaveDraft(){if(saving){message('Please wait for your lesson to finish saving.');return false}if(dirty){message('Save your lesson before choosing another day.');$('lesson-note').focus();return false}return true}
@@ -213,15 +217,17 @@
       for(let day=1;day<=count;day++){const d=new Date(viewing.getFullYear(),viewing.getMonth(),day),dateKey=key(d),button=document.createElement('button');button.type='button';button.textContent=day;button.className='day app-button'+(dates.has(dateKey)?' logged':'')+(dateKey===key(selected)?' selected':'')+(dateKey===key(today)?' today':'');button.setAttribute('aria-label',`${d.toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})}${dates.has(dateKey)?', lesson logged':''}`);button.setAttribute('aria-pressed',dateKey===key(selected));button.addEventListener('click',()=>{if(!canLeaveDraft())return;selected=d;dirty=false;render();message('')});container.append(button)}
       $('selected-date').textContent=selected.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});$('editor-title').textContent=key(selected)===key(today)?"Today's lesson":'Lesson journal';
       const existing=logged.find(r=>r.date===key(selected));if(!dirty&&!saving)$('lesson-note').value=existing?.note||'';$('character-count').textContent=`${$('lesson-note').value.length} / 1000`;$('save-lesson').disabled=!ready||saving;
-      $('toggle-reminders').setAttribute('aria-pressed',String(reminderEnabled));$('toggle-reminders').textContent=`On-page reminders: ${reminderEnabled?'On':'Off'}`;$('toggle-reminders').disabled=!ready;checkReminder();
+      $('toggle-reminders').setAttribute('aria-pressed',String(reminderEnabled));$('toggle-reminders').textContent=`Reminders: ${reminderEnabled?'On':'Off'}`;$('toggle-reminders').disabled=!ready;$('toggle-email-reminders').textContent=`Email reminders: ${emailEnabled?'On':'Off'}`;$('toggle-email-reminders').setAttribute('aria-pressed',String(emailEnabled));$('toggle-email-reminders').disabled=!ready;$('enable-notifications').textContent=`Phone notifications: ${pushEnabled?'On':'Off'}`;checkReminder();
     }
     async function loadRecords(){
       if(!currentUser){records=[];ready=false;render();message('Sign in to save and access your lessons.');return}
+      const detectedTimezone=Intl.DateTimeFormat().resolvedOptions().timeZone||'Africa/Lagos';
+      await Promise.all([db.from('profiles').update({timezone:detectedTimezone}).eq('id',currentUser.id),db.from('reminder_preferences').upsert({user_id:currentUser.id,timezone:detectedTimezone},{onConflict:'user_id'})]);
       ready=false;message('Loading your lessons…');
-      const [lessons,completions,prefs]=await Promise.all([db.from('lessons').select('id,lesson_date,note,created_at').order('lesson_date',{ascending:true}),db.from('course_completions').select('id,completion_month,created_at'),db.from('reminder_preferences').select('enabled').maybeSingle()]);
+      const [lessons,completions,prefs]=await Promise.all([db.from('lessons').select('id,lesson_date,note,created_at').order('lesson_date',{ascending:true}),db.from('course_completions').select('id,completion_month,created_at'),db.from('reminder_preferences').select('enabled,email_enabled,push_enabled,timezone').maybeSingle()]);
       const error=lessons.error||completions.error||prefs.error;if(error){console.error(error);message('Could not load your data: '+error.message);return}
       records=[...(lessons.data||[]).map(r=>({id:r.id,kind:'lesson',date:r.lesson_date,month:r.lesson_date.slice(0,7),note:r.note,created_at:r.created_at})),...(completions.data||[]).map(r=>({id:r.id,kind:'completed',date:'',month:r.completion_month.slice(0,7),note:'',created_at:r.created_at}))];
-      reminderEnabled=prefs.data?.enabled??true;ready=true;render();message('Your lessons are synced.');
+      reminderEnabled=prefs.data?.enabled??true;emailEnabled=prefs.data?.email_enabled??false;pushEnabled=prefs.data?.push_enabled??false;ready=true;render();message('Your lessons are synced.');
     }
     async function refreshAuth(){const {data:{session}}=await db.auth.getSession();currentUser=session?.user||null;updateAuthUI();if(currentUser)await loadRecords();else{records=[];ready=false;render();message('Sign in to save and access your lessons.')}}
     function updateAuthUI(){ $('auth-user').textContent=currentUser?currentUser.email:'';$('auth-toggle').textContent=currentUser?'Account':'Sign in';$('auth-signout').hidden=!currentUser;$('auth-submit').hidden=!!currentUser;$('auth-signup').hidden=!!currentUser;$('auth-email-input').disabled=!!currentUser;$('auth-password-input').disabled=!!currentUser;if(currentUser){$('auth-panel').classList.remove('visible');authMessage('Signed in as '+currentUser.email)}else authMessage('Sign in to save and access your lessons across devices.')}
