@@ -21,6 +21,8 @@ create policy "Users read own reminder delivery history" on public.reminder_deli
 for select to authenticated using (auth.uid() = user_id);
 revoke all on public.reminder_delivery_log from anon, authenticated;
 grant select on public.reminder_delivery_log to authenticated;
+grant all on public.reminder_delivery_log to service_role;
+grant all on public.push_subscriptions to service_role;
 
 -- Only the server's service-role client may claim jobs. Each slot/channel is
 -- inserted atomically, so overlapping cron invocations cannot double-send.
@@ -49,7 +51,8 @@ as $$
     from auth.users u
     join public.profiles p on p.id = u.id
     join public.reminder_preferences rp on rp.user_id = u.id
-    where rp.enabled = true
+    where u.email_confirmed_at is not null
+      and rp.enabled = true
       and (rp.email_enabled = true or rp.push_enabled = true)
       and extract(hour from (p_now at time zone coalesce(nullif(rp.timezone,''), nullif(p.timezone,''), 'Africa/Lagos')))::integer in (16,18,20,22)
       and extract(minute from (p_now at time zone coalesce(nullif(rp.timezone,''), nullif(p.timezone,''), 'Africa/Lagos')))::integer < 15
