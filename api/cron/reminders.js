@@ -3,12 +3,6 @@ import { Resend } from 'resend';
 import webpush from 'web-push';
 import { handleSchedule } from '@vercel/schedules';
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
-
 function escapeHtml(value = '') {
   return String(value).replace(/[&<>"']/g, c => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -18,7 +12,15 @@ function escapeHtml(value = '') {
 export const POST = handleSchedule(async (metadata) => {
   const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'];
   const missing = required.filter(k => !process.env[k]);
-  if (missing.length) return res.status(500).json({ error: `Missing environment variables: ${missing.join(', ')}` });
+  if (missing.length) {
+    throw new Error(`Missing environment variables: ${missing.join(', ')}`);
+  }
+
+  const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
 
   const { data: jobs, error } = await supabase.rpc('claim_due_reminders', { p_now: new Date().toISOString() });
   if (error) {
