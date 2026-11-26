@@ -55,7 +55,6 @@ as $$
       and rp.enabled = true
       and (rp.email_enabled = true or rp.push_enabled = true)
       and extract(hour from (p_now at time zone coalesce(nullif(rp.timezone,''), nullif(p.timezone,''), 'Africa/Lagos')))::integer in (16,18,20,22)
-      and extract(minute from (p_now at time zone coalesce(nullif(rp.timezone,''), nullif(p.timezone,''), 'Africa/Lagos')))::integer < 15
       and not exists (
         select 1 from public.lessons l
         where l.user_id = u.id
