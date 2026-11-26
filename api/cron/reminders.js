@@ -10,6 +10,10 @@ function escapeHtml(value = '') {
 }
 
 export const POST = handleSchedule(async (metadata) => {
+  console.log('Course Streak reminder schedule invoked:', JSON.stringify({
+    schedule: metadata?.name,
+    scheduledAt: metadata?.scheduledAt
+  }));
   const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'];
   const missing = required.filter(k => !process.env[k]);
   if (missing.length) {
@@ -25,7 +29,7 @@ export const POST = handleSchedule(async (metadata) => {
   const { data: jobs, error } = await supabase.rpc('claim_due_reminders', { p_now: new Date().toISOString() });
   if (error) {
     console.error('Reminder claim failed:', error);
-    return res.status(500).json({ error: 'Could not claim reminder jobs' });
+    throw new Error(`Could not claim reminder jobs: ${error.message || String(error)}`);
   }
 
   const results = { claimed: jobs?.length || 0, emailSent: 0, pushSent: 0, skipped: 0, failed: 0 };
@@ -114,5 +118,5 @@ export const POST = handleSchedule(async (metadata) => {
     }
   }
 
-  console.log('Course Streak reminder run:', JSON.stringify({ schedule: metadata.name, scheduledAt: metadata.scheduledAt, ...results }));
+  console.log('Course Streak reminder run:', JSON.stringify({ schedule: metadata?.name, scheduledAt: metadata?.scheduledAt, ...results }));
 });

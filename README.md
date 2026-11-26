@@ -27,7 +27,7 @@ The initial reminder schedule is 4 PM, 6 PM, 8 PM, and 10 PM in each user's dete
 - Push notifications are opt-in per device/browser.
 - A reminder is not sent after a lesson is saved for that user's local calendar date.
 - A unique delivery record per user/date/hour/channel prevents duplicate sends if schedule invocations overlap.
-- The scheduled worker checks every 15 minutes. The SQL claim function only claims the first 15 minutes of each target hour.
+- The scheduled worker checks every 15 minutes. The SQL claim function can claim a reminder at any point during its target hour, so a delayed schedule run does not permanently miss the reminder. Unique delivery records prevent duplicate sends, and failed sends can be retried by a later run in the same hour.
 
 ## Vercel environment variables
 
