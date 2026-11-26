@@ -1,0 +1,19 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "schedules": {
+    "course-streak-reminders": {
+      "schedule": "*/15 * * * *",
+      "timezone": "UTC",
+      "function": "api/cron/reminders"
+    }
+  },
+  "functions": {
+    "api/cron/reminders.js": {
+      "experimentalTriggers": [
+        {
+          "type": "schedule/v1beta"
+        }
+      ]
+    }
+  }
+}
